@@ -27,7 +27,7 @@ url: "https://ryleyvh.github.io" # the base hostname & protocol for your site, e
 github_username: ryleyvh
 
 # Build settings
-theme: pages-themes/cayman@v.0.2.0
+remote_theme: pages-themes/cayman@v.0.2.0
 plugins:
   - jekyll-feed
   - jekyll-remote-theme
