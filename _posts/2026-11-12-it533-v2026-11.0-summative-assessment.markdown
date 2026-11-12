@@ -1,0 +1,65 @@
+---
+layout: post
+title: "IT533 v2026 11.0 Summative Assessment"
+date: 2026-11-12 14:00:00
+categories: calbright summative
+---
+Many of the labs in this chapter focused on configuring, documenting, and testing Cisco network appliances over both serial console connection and secure shell. Though interacting with Cisco IOS via the terminal was daunting at first, I grew to become extremely comfortable navigating the different commands and shortcuts. Of all of these labs, "Build a Switch and Router Network", Packet Tracer Lab 6, was the most useful by simultaneously strengthening IOS knowledge and introducing important security concepts such as securing SSH access.
+
+On the surface, this lab looks very simple, as the topology only shows one switch, one router, and two end devices. However, not only does the lab ask you to properly cable all of these devices together, it also asks to configure the devices and their network interfaces according to an addressing table to ensure connection between all devices. This configuration is done via either a serial connection, USB connection, or SSH over the network.
+
+To begin, the lab instructs you to connect all of the devices together using copper straight-through wires between specific fast and gigabit Ethernet ports. These ports are PCA F0 to S1 F0/1, S1 G0/1 to R1 G0/0/1, and R1 G0/0/0 to PCB F0.
+
+![Image]({{ site.baseurl }}/image/nov09img1.png)
+
+After properly connecting ports to each other, you are instructed to manually configure static IP addresses, subnet masks, and default gateways on the end devices (PCA and PCB) according to the addressing table. However, when a `ping 192.168.0.3` command is sent via command prompt window, the pings fail.
+
+![Image]({{ site.baseurl }}/image/nov09img2.png)
+
+This ping fails because R1 is not connected to either PCB or S1. As a result, PCB is not connected to the network, and cannot be reached by PCA, which is on the network. In order to set up this network, we need to configure all of the network devices using Cisco's headless operating system, IOS.
+
+We use a console cable (the light blue cable) to connect PCA to R1 in order to interface directly with the router. We then use the terminal on PCA to access the router. Since it is not configured with any passwords or secrets, we can log in immediately by pressing "Enter" or "Return" on the keyboard. We can then enter privileged EXEC mode using the `enable` command.
+
+From here, we can start configuring the device. In order to enter the configuration terminal, we can use the command `configure terminal`. We can now apply configuration commands. To begin, we will assign the device a hostname according to the addressing table, which in this case is R1. Then, we can assign an encrypted password to enable privileged EXEC mode by using the `enable secret {password}` command. In this case, the password is "class". We can also enable a plaintext password to access the device over console. In order to do this, we need to configure the specific console line. We can do this by entering the command `line console 0`. Once the prompt has changed to confirm that we are configuring the console line, we can now assign the password using `password {password}` (the password in this case being "cisco") and `login` to enforce the login prompt upon attempting to access the device. We then use `exit` to stop configuring the console line and go back to the general configuration terminal. In order to encrypt the plaintext password that was just set for the console line, we need to enable encryption using the `service password-encryption` command. We want to set a banner for the device that informs the user upon startup that unauthorized access is prohibited. We can use the `banner motd "{message}"` command in order to set it.
+
+![Image]({{ site.baseurl }}/image/nov09img3.png)
+
+We then need to manually configure each Ethernet interface listed in the addressing table with their proper IP addresses and subnet masks. Similarly to the console line, the configuration terminal must be told to configure specific interfaces. We use a similar command `interface {interface}` in order to do this. Now that we are in the configure terminal for GigabitEthernet0/0/0, we can use the `ip address {IP address} {subnet mask}` command to set the IP address and subnet mask for this network interface. We then need to use `no shutdown` in order to enable to interface and allow the transmission of data. After using the `exit` command, you can switch to the other GigabitEthernet interface and assign its IP addresses.
+
+![Image]({{ site.baseurl }}/image/nov09img4.png)
+
+Now, we can save the running-config to the startup-config in order to save our changes. This is done by using the command `copy running-config startup-config`. The terminal will ask you to verify the destination filename and you must press enter in order to continue. Now, if we ping PCB from PCA we can see that the pings are successful. 
+
+![Image]({{ site.baseurl }}/image/nov09img5.png)
+
+However, now the switch must be configured similarly to how we configured the router. We can use the same PC and a console cable to remote into the switch the same way we configured the router. Configurations include hostname, encrypted passwords, banners, and IP address configurations. Unlike the Gigabit Ethernet interfaces on the router, the VLAN 1 interface on the switch requires a default gateway. We use a similar command to the `ip address` command, `ip default-gateway {default gateway address}`. We then save our configurations in the same way as before.
+
+![Image]({{ site.baseurl }}/image/nov09img6.png)
+
+Now that the router and switch have been configured, the lab transitions to showing how to display device information. First, we use the `show version` command, which outputs the device's IOS version, hardware specifications, and other information.
+
+![Image]({{ site.baseurl }}/image/nov09img7.png)
+
+We then use the `show ip route` command to invoke the router's routing table. This command shows which interfaces are up and connected.
+
+![Image]({{ site.baseurl }}/image/nov09img8.png)
+
+Then, we use the `show interfaces {interface name}` command in order to see information including operational status, MAC address, IP address, input/output rates, and other important information.
+
+![Image]({{ site.baseurl }}/image/nov09img9.png)
+
+You can also use `show ip interface brief` to get a summary list of interfaces and their statuses. This can be used to easily verify interface configuration.
+
+![Image]({{ site.baseurl }}/image/nov09img10.png)
+
+Now, the lab asks us to set up and secure remote access to the router. We will console back into R1 in order to set up SSH access. First, we have to configure the router's domain name using `ip domain-name {domain name}`. Here, the domain name is academy.net. Then, we need to generate RSA keys with 1024 bit key length. We use the command `crypto key generate rsa`, and then enter the key length in bits. Then, create a set of login credentials for SSH access using the `username {username} secret {password}` command. Next, use the `line` command to configure the VTY lines to use the local username database using `login local`. We will also use the command `transport input ssh` to only allow SSH traffic for remote access.
+
+![Image]({{ site.baseurl }}/image/nov09img11.png)
+
+Now that we have fully set up SSH login on the router, we can use the command prompt on PCA in order to confirm that SSH works.
+
+![Image]({{ site.baseurl }}/image/nov09img12.png)
+
+With that, both the router and switch have been configured with basic setup, IP addressing, and SSH compatibility.
+
+Though configuring these network appliances using a headless system started off very daunting, I have become very comfortable with hardware configuration with no GUI. I struggled a lot with remembering all of the commands and looking up commands I didn't know yet, but now I find myself able to configure devices accurately and quickly. It definitely helps that I have Linux experence, which uses the terminal regularly to update the system and other tasks, so the transition to becoming comfortable with IOS was only a matter of time. I also have experience with using SSH before, so it was helpful to learn how to enable SSH connections within IOS. With this lab and the many others I have completed, I feel sufficiently prepared to accurately configure network devices within a network.
